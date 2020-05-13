@@ -12,13 +12,15 @@ plugins {
 repositories {
     google()
     mavenCentral()
+    mavenLocal()
 }
 
 val GROUP: String by project
 val VERSION_NAME: String by project
 
+val IN_JAR: String by project
 
-
+val IN_JAR_BOOL = IN_JAR.toBoolean()
 group = GROUP
 version = VERSION_NAME
 
@@ -27,7 +29,7 @@ val carthageBuildDir = "$mparticleDir/Carthage/Build/iOS"
 
 kotlin {
     android() {
-        publishLibraryVariants("release", "debug")
+        publishLibraryVariants("release")
         mavenPublication {
             artifactId = "smartype"
         }
@@ -55,8 +57,13 @@ kotlin {
         binaries {
             framework(listOf(RELEASE)) {
                 baseName = "Smartype"
-                export(project(":smartype-api"))
-                export(project(":smartype-receivers:smartype-mparticle"))
+                if (IN_JAR_BOOL){
+                    export("com.mparticle:smartype-api:$VERSION_NAME")
+                    export("com.mparticle:smartype-mparticle:$VERSION_NAME")
+                } else {
+                    export(project(":smartype-api"))
+                    export(project(":smartype-receivers:smartype-mparticle"))
+                }
                 linkerOpts.add("-F${carthageBuildDir}")
                 linkerOpts.add("-framework")
                 linkerOpts.add("mParticle_Apple_SDK")
@@ -93,8 +100,13 @@ kotlin {
         val commonMain by getting {
             kotlin.srcDir("${project(":smartype-generator").buildDir}/generatedSources")
             dependencies {
-                api(project(":smartype-api"))
-                api(project(":smartype-receivers:smartype-mparticle"))
+                if (IN_JAR_BOOL){
+                    api("com.mparticle:smartype-api:$VERSION_NAME")
+                    api("com.mparticle:smartype-mparticle:$VERSION_NAME")
+                } else {
+                    api(project(":smartype-api"))
+                    api(project(":smartype-receivers:smartype-mparticle"))
+                }
                 implementation(kotlin("stdlib-common"))
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:${versions.serialization}")
             }
@@ -115,6 +127,7 @@ kotlin {
         if (androidMain != null) {
             androidMain.dependsOn(commonMain)
             androidMain.dependencies {
+
                 api(kotlin("stdlib"))
                 api("org.jetbrains.kotlinx:kotlinx-serialization-runtime:${versions.serialization}")
             }

@@ -5,3 +5,5 @@ include(
     ":smartype-receivers:smartype-mparticle"
 )
 rootProject.name = "smartype"
+
+enableFeaturePreview("GRADLE_METADATA")
